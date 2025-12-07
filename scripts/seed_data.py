@@ -1,14 +1,19 @@
-# Load Netflix data
+# Load netflix data
+
+import sys
+import os
+
+# Add parent directory to path so we can import models
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas as pd
 from models import get_session, Title, Genre, Country, People, TitleGenre, TitleCountry, TitlePeople
-
 # Path to the CSV file
 CSV_FILE = 'netflix_titles.csv'
 
-def load_csv():
-    print(f"Loading {CSV_FILE}...")
-    df = pd.read_csv(CSV_FILE)
+def load_csv(csv_path):
+    print(f"Loading {csv_path}...")
+    df = pd.read_csv(csv_path)
     print(f"Loaded {len(df)} records")
     return df
 
@@ -165,11 +170,12 @@ def add_titles(db, df, genre_map, country_map, people_map):
     print(f"Added {count} titles")
 
 def main():
+    
     print("=" * 50)
     print("Loading Netflix data into database")
     print("=" * 50)
     
-    df = load_csv()
+    df = load_csv(CSV_FILE)
     db = get_session()
     
     try:
