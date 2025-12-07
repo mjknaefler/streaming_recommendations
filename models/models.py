@@ -1,4 +1,4 @@
-# SQLAlchemy model classes
+# SQLAlchemy models
 
 from sqlalchemy import Column, Integer, String, Date, Text, Boolean, ForeignKey, DateTime, CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import relationship
@@ -6,6 +6,7 @@ from sqlalchemy.sql import func
 from models.database import Base
 
 
+# content tables
 class Title(Base):
     __tablename__ = 'title'
     
@@ -19,6 +20,7 @@ class Title(Base):
     duration_unit = Column(String(20))
     description = Column(Text)
     
+    # relationships
     genres = relationship('Genre', secondary='title_genre', back_populates='titles')
     countries = relationship('Country', secondary='title_country', back_populates='titles')
     people = relationship('TitlePeople', back_populates='title')
@@ -79,6 +81,7 @@ class TitlePeople(Base):
     person = relationship('People', back_populates='titles')
 
 
+# user tables
 class User(Base):
     __tablename__ = 'users'
     

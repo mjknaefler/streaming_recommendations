@@ -1,8 +1,8 @@
-# Quick test to see if I can connect to postgres
+# test if postgres connection works
 
 import psycopg2
 
-# TODO: move these to env variables later
+# TODO: move to env file
 HOST = 'localhost'
 PORT = '5432'
 DATABASE = 'streaming_recommendations'
@@ -19,7 +19,7 @@ try:
     )
     print("Connected!")
     
-    # test a simple query
+    # simple test query
     cur = conn.cursor()
     cur.execute("SELECT COUNT(*) FROM title;")
     count = cur.fetchone()[0]

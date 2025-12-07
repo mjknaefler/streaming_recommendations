@@ -1,4 +1,4 @@
--- No duplicate tables
+-- drop tables if they exist
 DROP TABLE IF EXISTS user_genre_preferences CASCADE;
 DROP TABLE IF EXISTS user_swipes CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS title_genre CASCADE;
 DROP TABLE IF EXISTS genre CASCADE;
 DROP TABLE IF EXISTS title CASCADE;
 
--- Streaming content tables
+-- content tables
 CREATE TABLE title (
     show_id VARCHAR(20) PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -67,7 +67,7 @@ CREATE TABLE title_people (
     CONSTRAINT check_role CHECK (role IN ('director', 'cast'))
 );
 
--- User tables
+-- user tables
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE user_genre_preferences (
     FOREIGN KEY (genre_id) REFERENCES genre(genre_id) ON DELETE CASCADE
 );
 
--- Some indexes for better performance
+-- indexes for common queries
 CREATE INDEX idx_title_type ON title(type);
 CREATE INDEX idx_title_release_year ON title(release_year);
 CREATE INDEX idx_user_swipes_user ON user_swipes(user_id);
@@ -105,7 +105,7 @@ CREATE INDEX idx_user_swipes_preference ON user_swipes(preference);
 CREATE INDEX idx_title_genre_show ON title_genre(show_id);
 CREATE INDEX idx_title_genre_genre ON title_genre(genre_id);
 
--- Update timestamp trigger
+-- trigger to update timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
