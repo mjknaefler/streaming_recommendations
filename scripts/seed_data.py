@@ -1,14 +1,14 @@
-# Load netflix data
+# load netflix data into database
 
 import sys
 import os
 
-# Add parent directory to path so we can import models
+# add parent dir to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pandas as pd
 from models import get_session, Title, Genre, Country, People, TitleGenre, TitleCountry, TitlePeople
-# Path to the CSV file
+
 CSV_FILE = 'netflix_titles.csv'
 
 def load_csv(csv_path):
@@ -19,7 +19,6 @@ def load_csv(csv_path):
 
 def add_genres(db, df):
     print("Adding genres...")
-    # Get unique genres
     genres = set()
     for listed_in in df['listed_in'].dropna():
         for genre in listed_in.split(','):
@@ -55,15 +54,13 @@ def add_countries(db, df):
     return country_map
 
 def add_people(db, df):
-    print("Adding people (directors and cast)...")
+    print("Adding people...")
     people = set()
     
-    # Get directors
     for director_str in df['director'].dropna():
         for director in director_str.split(','):
             people.add(director.strip())
     
-    # Get cast
     for cast_str in df['cast'].dropna():
         for person in cast_str.split(','):
             people.add(person.strip())
@@ -85,7 +82,7 @@ def add_titles(db, df, genre_map, country_map, people_map):
     
     for idx, row in df.iterrows():
         try:
-            # Parse duration
+            # parse duration field
             duration_val = None
             duration_unit = None
             if pd.notna(row['duration']):
@@ -94,11 +91,10 @@ def add_titles(db, df, genre_map, country_map, people_map):
                     duration_val = int(parts[0])
                     duration_unit = parts[1]
             
-            # Parse date
+            # convert pandas timestamp to date
             date_val = pd.to_datetime(row['date_added'], errors='coerce')
             date_added = date_val.date() if pd.notna(date_val) else None
             
-            # Create title
             title = Title(
                 show_id=row['show_id'],
                 title=row['title'],
@@ -113,21 +109,21 @@ def add_titles(db, df, genre_map, country_map, people_map):
             db.add(title)
             db.flush()
             
-            # Add genres
+            # add genres
             if pd.notna(row['listed_in']):
                 for genre in row['listed_in'].split(','):
                     genre = genre.strip()
                     if genre in genre_map:
                         db.add(TitleGenre(show_id=row['show_id'], genre_id=genre_map[genre]))
             
-            # Add countries
+            # add countries
             if pd.notna(row['country']):
                 for country in row['country'].split(','):
                     country = country.strip()
                     if country in country_map:
                         db.add(TitleCountry(show_id=row['show_id'], country_id=country_map[country]))
             
-            # Add directors (skip duplicates)
+            # add directors - need to skip duplicates
             if pd.notna(row['director']):
                 seen_directors = set()
                 for i, director in enumerate(row['director'].split(',')):
@@ -141,7 +137,7 @@ def add_titles(db, df, genre_map, country_map, people_map):
                         ))
                         seen_directors.add(director)
             
-            # Add cast (skip duplicates)
+            # add cast - skip duplicates here too
             if pd.notna(row['cast']):
                 seen_cast = set()
                 for i, person in enumerate(row['cast'].split(',')):
@@ -155,7 +151,6 @@ def add_titles(db, df, genre_map, country_map, people_map):
                         ))
                         seen_cast.add(person)
             
-            # Commit every 100 records
             if (idx + 1) % 100 == 0:
                 db.commit()
                 print(f"  Processed {idx + 1} titles...")
@@ -170,9 +165,8 @@ def add_titles(db, df, genre_map, country_map, people_map):
     print(f"Added {count} titles")
 
 def main():
-    
     print("=" * 50)
-    print("Loading Netflix data into database")
+    print("Loading Netflix data")
     print("=" * 50)
     
     df = load_csv(CSV_FILE)
@@ -184,7 +178,7 @@ def main():
         people_map = add_people(db, df)
         add_titles(db, df, genre_map, country_map, people_map)
         
-        print("\nDone! Data loaded successfully.")
+        print("\nDone!")
     except Exception as e:
         print(f"Error: {e}")
         db.rollback()
