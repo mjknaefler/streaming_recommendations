@@ -1,20 +1,11 @@
-# SQLAlchemy models for the database
-# Everything in one file for now, will organize later
+# SQLAlchemy model classes
 
-from sqlalchemy import create_engine, Column, Integer, String, Date, Text, Boolean, ForeignKey, DateTime, CheckConstraint, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy import Column, Integer, String, Date, Text, Boolean, ForeignKey, DateTime, CheckConstraint, UniqueConstraint
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-
-# Database connection
-DATABASE_URL = "postgresql://myuser:mypass@localhost:5432/streaming_recommendations"
-
-engine = create_engine(DATABASE_URL, echo=False)
-SessionLocal = sessionmaker(bind=engine)
-Base = declarative_base()
+from models.database import Base
 
 
-# Content models
 class Title(Base):
     __tablename__ = 'title'
     
@@ -122,8 +113,3 @@ class UserGenrePreference(Base):
     
     user = relationship('User', back_populates='genre_preferences')
     genre = relationship('Genre', back_populates='user_preferences')
-
-
-# Helper function to get database session
-def get_session():
-    return SessionLocal()
