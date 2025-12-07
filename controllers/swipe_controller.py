@@ -19,7 +19,7 @@ class SwipeController:
         if not self.buffer:
             self.view.no_titles_left()
             return
-        
+
         while True:
             if not self.buffer:
                 self.load_more_titles()
@@ -42,15 +42,17 @@ class SwipeController:
 
     def load_more_titles(self, batch_size=10):
         # get random titles user hasn't swiped on
-        titles = self.db.query(Title)\
-            .outerjoin(UserSwipe, and_(UserSwipe.show_id == Title.show_id, UserSwipe.user_id == self.user.user_id))\
-            .filter(UserSwipe.swipe_id == None)\
-            .order_by(func.random())\
-            .limit(batch_size)\
-            .all()
+        q = self.db.query(Title)
+        q = q.outerjoin(UserSwipe, and_(UserSwipe.show_id == Title.show_id, UserSwipe.user_id == self.user.user_id))
+        q = q.filter(UserSwipe.swipe_id == None)
+        q = q.order_by(func.random())
+        # grab a handful at a time
+        q = q.limit(batch_size)  
+        titles = q.all()
         self.buffer.extend(titles)
 
     def save_swipe(self, title, preference):
+        # save decision
         swipe = UserSwipe(
             user_id=self.user.user_id,
             show_id=title.show_id,
