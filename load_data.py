@@ -1,4 +1,4 @@
-# Load Netflix CSV data into the database
+# Load Netflix data
 
 import pandas as pd
 from models import get_session, Title, Genre, Country, People, TitleGenre, TitleCountry, TitlePeople
@@ -14,7 +14,7 @@ def load_csv():
 
 def add_genres(db, df):
     print("Adding genres...")
-    # Get unique genres from the listed_in column
+    # Get unique genres
     genres = set()
     for listed_in in df['listed_in'].dropna():
         for genre in listed_in.split(','):
@@ -89,12 +89,16 @@ def add_titles(db, df, genre_map, country_map, people_map):
                     duration_val = int(parts[0])
                     duration_unit = parts[1]
             
+            # Parse date
+            date_val = pd.to_datetime(row['date_added'], errors='coerce')
+            date_added = date_val.date() if pd.notna(date_val) else None
+            
             # Create title
             title = Title(
                 show_id=row['show_id'],
                 title=row['title'],
                 type=row['type'],
-                date_added=pd.to_datetime(row['date_added']) if pd.notna(row['date_added']) else None,
+                date_added=date_added,
                 release_year=int(row['release_year']) if pd.notna(row['release_year']) else None,
                 age_rating=row['rating'] if pd.notna(row['rating']) else 'Not Rated',
                 duration_value=duration_val,
@@ -118,29 +122,33 @@ def add_titles(db, df, genre_map, country_map, people_map):
                     if country in country_map:
                         db.add(TitleCountry(show_id=row['show_id'], country_id=country_map[country]))
             
-            # Add directors
+            # Add directors (skip duplicates)
             if pd.notna(row['director']):
+                seen_directors = set()
                 for i, director in enumerate(row['director'].split(',')):
                     director = director.strip()
-                    if director in people_map:
+                    if director in people_map and director not in seen_directors:
                         db.add(TitlePeople(
                             show_id=row['show_id'],
                             person_id=people_map[director],
                             role='director',
                             credit_order=i
                         ))
+                        seen_directors.add(director)
             
-            # Add cast
+            # Add cast (skip duplicates)
             if pd.notna(row['cast']):
+                seen_cast = set()
                 for i, person in enumerate(row['cast'].split(',')):
                     person = person.strip()
-                    if person in people_map:
+                    if person in people_map and person not in seen_cast:
                         db.add(TitlePeople(
                             show_id=row['show_id'],
                             person_id=people_map[person],
                             role='cast',
                             credit_order=i
                         ))
+                        seen_cast.add(person)
             
             # Commit every 100 records
             if (idx + 1) % 100 == 0:
