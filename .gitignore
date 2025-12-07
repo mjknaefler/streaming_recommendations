@@ -1,3 +1,18 @@
-venv/
+# python stuff
 __pycache__/
+*.pyc
+venv/
+env/
+
+# environment
 .env
+
+# data files
+*.csv
+data/
+
+# os files
+.DS_Store
+
+# testing
+test_*.py
